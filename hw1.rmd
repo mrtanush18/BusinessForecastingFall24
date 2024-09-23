@@ -1,0 +1,108 @@
+---
+title: "HW 1"
+author: "ts1333@scarletmail.rutgers.edu"
+date: "9/21/2024"
+output: html_document
+---
+
+```{r}
+
+# Set a CRAN mirror
+# options(repos = c(CRAN = "https://cran.r-project.org"))
+
+# Importing the file
+library(readxl)
+data <- read_excel("C:/Users/tanus/Downloads/MS/BF/Typical_Employee_Survey_Data.xlsx", col_names = FALSE) 
+
+str(data)
+
+# Convert character columns to numeric
+
+data <- as.data.frame(lapply(data, function(x)
+as.numeric(as.character(x))))
+
+str(data)
+
+# # Added header row
+
+colnames(data) <- c("Age", "Gender", "Satisfaction", "Perks","Exp","Promotion", "Feedback", "SetBudget", "Pride", "Job_switch", "Relations")
+
+head(data)
+
+# 5-point summary
+
+data <- sapply( data, as.numeric ) 
+data <- as.data.frame(data)
+summary <- fivenum(data)
+summary
+
+# remove NA values
+data <- na.omit(data)
+
+# Create boxplots for each numeric column
+library(ggplot2)
+library(reshape2)
+
+# Select only numeric columns
+
+numeric_columns <- data[, sapply(data, is.numeric)]
+
+# Convert any list columns to numeric vectors
+
+numeric_columns <- lapply(numeric_columns, function(x) { if
+(is.list(x)) { return(as.numeric(unlist(x))) } else { return(x) } })
+numeric_columns <- as.data.frame(numeric_columns)
+
+# Check the structure again
+
+str(numeric_columns)
+
+melted_df <- melt(numeric_columns)
+
+str(melted_df)
+
+# Create boxplots using ggplot2
+ggplot(melted_df, aes(x = variable, y = value)) + geom_boxplot(fill =
+"lightblue") + labs(title = "Boxplots of Numerical Columns", x =
+"Columns", y = "Values") + theme_minimal()
+
+
+# Convert the columns that need to be converted to Factors
+data$Gender <- as.factor(data$Gender)
+data$Satisfaction <- as.factor(data$Satisfaction)
+data$Perks <- as.factor(data$Perks)
+data$Promotion <- as.factor(data$Promotion)
+data$Feedback <- as.factor(data$Feedback)
+data$SetBudget <- as.factor(data$SetBudget)
+data$Pride <- as.factor(data$Pride)
+data$Job_switch <- as.factor(data$Job_switch)
+data$Relations <- as.factor(data$Relations)
+
+str(data)
+
+# Plot the right visual for each column
+for (col in names(data)) {
+  if (is.numeric(data[[col]])) {
+    print(ggplot(data, aes_string(col)) + 
+            geom_histogram(binwidth = 10, fill = "blue") + 
+            ggtitle(paste("Histogram of", col)))
+  } else if (is.factor(data[[col]])) {
+    print(ggplot(data, aes_string(col)) + 
+            geom_bar(fill = "green") + 
+            ggtitle(paste("Bar plot of", col)))
+  }
+}
+
+# Plot scatter plots to show few relationships 
+numeric_columns <- unlist(numeric_columns)
+num_cols <- names(data)[numeric_columns]
+
+x <- "Age"
+y <- "Gender"
+
+ggplot(data, aes_string(x = x, y = y)) +  geom_point() + labs(title = paste("Scatterplot of", x, "vs", y), x = x, y = y)
+
+A <- "Exp"
+B <- "Promotion"
+
+ggplot(data, aes_string(x = A, y = B)) +  geom_point() + labs(title = paste("Scatterplot of", A, "vs", B), x = A, y = B)
